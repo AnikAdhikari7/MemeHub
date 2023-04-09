@@ -4,5 +4,7 @@
 
     <string name="share">Share</string>
     <string name="next">Next</string>
+    <string name="prev">Prev</string>
+
     <string name="github_logo">github_logo</string>
 </resources>

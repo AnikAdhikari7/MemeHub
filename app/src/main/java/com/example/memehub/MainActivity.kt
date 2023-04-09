@@ -25,10 +25,15 @@ import com.bumptech.glide.request.target.Target
 import com.example.memehub.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
-    private var currentImageUrl: String? = null
-    private var githubRepo = "https://github.com/AnikAdhikari7/MemeHub"
-    private var githubReleases = "Download MemeHub:\nhttps://github.com/AnikAdhikari7/MemeHub/releases"
+    private var imageUrlList = mutableListOf<String>()
+    private var currentImageIndex = 0
+
+    private val githubRepo = "https://github.com/AnikAdhikari7/MemeHub"
+    private val githubReleases = "Download MemeHub:\nhttps://github.com/AnikAdhikari7/MemeHub/releases"
     private lateinit var binding: ActivityMainBinding
+
+    // Instantiate the RequestQueue.
+    private val imageUrl = "https://meme-api.com/gimme"
 
     //variable for permission
     companion object {
@@ -51,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         actionBar.setDisplayShowHomeEnabled(true)
 
 
-        memeLoad()
+        memeLoad(true)
 
     }
 
@@ -72,38 +77,39 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun memeLoad() {
+    private fun memeLoad(new: Boolean) {
         binding.progressBar.visibility = View.VISIBLE
-        // Instantiate the RequestQueue.
-        val imageUrl = "https://meme-api.com/gimme"
 
         // Request a string response from the provided URL.
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, imageUrl, null,
             { response ->
-                currentImageUrl = response.getString("url")
-                Glide.with(this).load(currentImageUrl).listener(object: RequestListener<Drawable> {
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        binding.progressBar.visibility = View.GONE
-                        return false
-                    }
+                if (new) imageUrlList.add(response.getString("url"))
+//                listLen++
 
-                    override fun onResourceReady(
-                        resource: Drawable?,
-                        model: Any?,
-                        target: Target<Drawable>?,
-                        dataSource: DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        binding.progressBar.visibility = View.GONE
-                        return false
-                    }
-                }).into(binding.ivMemeImage)
+                Glide.with(this).load(imageUrlList[currentImageIndex])
+                    .listener(object : RequestListener<Drawable> {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            binding.progressBar.visibility = View.GONE
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: Drawable?,
+                            model: Any?,
+                            target: Target<Drawable>?,
+                            dataSource: DataSource?,
+                            isFirstResource: Boolean
+                        ): Boolean {
+                            binding.progressBar.visibility = View.GONE
+                            return false
+                        }
+                    }).into(binding.ivMemeImage)
             }, {
                 Toast.makeText(this, "Something went wrong!", Toast.LENGTH_LONG).show()
             })
@@ -118,13 +124,20 @@ class MainActivity : AppCompatActivity() {
         try {
             val bitmapDrawable = binding.ivMemeImage.drawable as BitmapDrawable
             val bitmap = bitmapDrawable.bitmap
-            val bitmapPath = MediaStore.Images.Media.insertImage(contentResolver, bitmap, "$currentImageUrl", null)
+            val bitmapPath = MediaStore.Images.Media.insertImage(
+                contentResolver,
+                bitmap,
+                imageUrlList[currentImageIndex],
+                null
+            )
             val bitmapUri = Uri.parse(bitmapPath)
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "image/*"
             intent.type = "text/plain"
             intent.putExtra(Intent.EXTRA_STREAM, bitmapUri)
-            intent.putExtra(Intent.EXTRA_TEXT, "Hey, Checkout this cool meme I got from MemeHub!\n$githubReleases")
+            intent.putExtra(
+                Intent.EXTRA_TEXT, "Hey, Checkout this cool meme I got from MemeHub!\n$githubReleases"
+            )
             startActivity(Intent.createChooser(intent, "Share image:"))
         } catch (e: Exception) {
             checkPermission(
@@ -136,13 +149,28 @@ class MainActivity : AppCompatActivity() {
 
 
     fun btNext(view: View) {
-        memeLoad()
+        currentImageIndex++
+        if (currentImageIndex == imageUrlList.size) memeLoad(true)
+        else memeLoad(false)
+    }
+
+    fun btPrev(view: View) {
+        if (currentImageIndex > 0) {
+            currentImageIndex--
+            memeLoad(false)
+        } else {
+            Toast.makeText(this, "No more memes!", Toast.LENGTH_SHORT).show()
+        }
     }
 
 
     // Function to check and request permission
     private fun checkPermission(permission: String, requestCode: Int) {
-        if (ContextCompat.checkSelfPermission(this@MainActivity, permission) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(
+                this@MainActivity,
+                permission
+            ) == PackageManager.PERMISSION_DENIED
+        ) {
             ActivityCompat.requestPermissions(this@MainActivity, arrayOf(permission), requestCode)
         }
     }
@@ -159,9 +187,11 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == STORAGE_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this@MainActivity, "Storage Permission Granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Storage Permission Granted", Toast.LENGTH_SHORT)
+                    .show()
             } else {
-                Toast.makeText(this@MainActivity, "Storage Permission Denied", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, "Storage Permission Denied", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }

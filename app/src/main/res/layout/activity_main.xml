@@ -34,25 +34,42 @@
         android:id="@+id/btShare"
         style="@style/Button"
         android:src="@drawable/ic_share"
-        android:layout_width="100dp"
+        android:layout_width="80dp"
         android:layout_marginEnd="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btNext"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toStartOf="@+id/btPrev"
         app:layout_constraintStart_toStartOf="parent"
         android:onClick="btShare"/>
+
+    <Button
+        android:id="@+id/btPrev"
+        style="@style/Button"
+        android:drawableStart="@drawable/ic_prev"
+        android:gravity="center|start"
+        android:text="@string/prev"
+        android:textSize="24sp"
+        android:textColor="@color/saffron"
+        android:layout_marginEnd="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btNext"
+        app:layout_constraintStart_toEndOf="@+id/btShare"
+        app:flow_horizontalBias=".5"
+        android:onClick="btPrev"/>
 
     <Button
         android:id="@+id/btNext"
         style="@style/Button"
         android:drawableEnd="@drawable/ic_next"
         android:text="@string/next"
+        android:gravity="center|end"
         android:textSize="24sp"
         android:textColor="@color/saffron"
+        android:layout_marginStart="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btShare"
+        app:layout_constraintStart_toEndOf="@+id/btPrev"
+        app:flow_horizontalBias=".5"
         android:onClick="btNext"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
